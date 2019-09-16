@@ -38,6 +38,12 @@ public:
     //! Set IPv6 address.
     bool set_ipv6(const char* ip, int port);
 
+    //! Set IPv4 multicast interface address.
+    bool set_multicast_iface_v4(const char* iface);
+
+    //! Set IPv6 multicast interface address.
+    bool set_multicast_iface_v6(const char* iface);
+
     //! Get sockaddr struct.
     sockaddr* saddr();
 
@@ -50,14 +56,23 @@ public:
     //! Get IP version (4 or 6).
     int version() const;
 
+    //! Get version (4 or 6) of multicast interface address.
+    int multicast_version() const;
+
     //! Get address port.
     int port() const;
 
     //! Check whether this is multicast address.
     bool multicast() const;
 
+    //! Check whether multicast interface address was initialized.
+    bool has_multicast_iface() const;
+
     //! Get IP address.
     bool get_ip(char* buf, size_t bufsz) const;
+
+    //! Get multicast interface address.
+    bool get_multicast_iface(char* buf, size_t bufsz) const;
 
     //! Compare addresses.
     bool operator==(const Address& other) const;
@@ -74,6 +89,13 @@ private:
         sockaddr_in addr4;
         sockaddr_in6 addr6;
     } sa_;
+
+    union {
+        in_addr addr4;
+        in6_addr addr6;
+    } miface_;
+
+    sa_family_t miface_family_;
 };
 
 } // namespace packet

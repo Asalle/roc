@@ -25,6 +25,37 @@
 
 using namespace roc;
 
+namespace {
+
+bool set_multicast_iface(packet::Address& address, const char* miface) {
+    if (!address.multicast()) {
+        roc_log(LogError, "can't set multicast interface for non-multicast address");
+        return false;
+    }
+
+    switch (address.version()) {
+    case 4: {
+        if (!address.set_multicast_iface_v4(miface)) {
+            return false;
+        }
+
+        break;
+    }
+    case 6: {
+        if (!address.set_multicast_iface_v6(miface)) {
+            return false;
+        }
+
+        break;
+    }
+    default:
+        return false;
+    }
+
+    return true;
+}
+} // namespace
+
 int main(int argc, char** argv) {
     core::CrashHandler crash_handler;
 
@@ -252,7 +283,11 @@ int main(int argc, char** argv) {
             roc_log(LogError, "can't parse source port: %s", args.source_arg);
             return 1;
         }
-
+        if (args.miface_given) {
+            if (!set_multicast_iface(port.address, args.miface_arg)) {
+                return 1;
+            }
+        }
         if (!trx.add_udp_receiver(port.address, receiver)) {
             roc_log(LogError, "can't bind source port: %s", args.source_arg);
             return 1;
@@ -270,6 +305,12 @@ int main(int argc, char** argv) {
                                   port)) {
             roc_log(LogError, "can't parse repair port: %s", args.repair_arg);
             return 1;
+        }
+
+        if (args.miface_given) {
+            if (!set_multicast_iface(port.address, args.miface_arg)) {
+                return 1;
+            }
         }
         if (!trx.add_udp_receiver(port.address, receiver)) {
             roc_log(LogError, "can't bind repair port: %s", args.repair_arg);
